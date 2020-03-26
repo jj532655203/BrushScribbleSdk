@@ -1,0 +1,2 @@
+include ':app', ':brush_scribble_view'
+rootProject.name='BrushScribbleView'
