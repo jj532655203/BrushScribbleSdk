@@ -1,4 +1,4 @@
-package com.jj.brushscribbleview;
+package com.jj.brushscribblesdk;
 
 import androidx.appcompat.app.AppCompatActivity;
 

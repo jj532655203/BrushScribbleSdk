@@ -1,2 +1,2 @@
-include ':app', ':brush_scribble_view'
-rootProject.name='BrushScribbleView'
+include ':app', ':brush_scribble_sdk'
+rootProject.name='BrushScribbleSdk'
