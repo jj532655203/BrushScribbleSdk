@@ -16,7 +16,9 @@ import java.util.List;
 public class BrushRender {
 
     private static final String TAG = "BrushRender";
-    private static final float SIZE_RATIO = 1f;
+    private static final float SIZE_AVERAGE = 180f;
+    private static final float SIZE_BASE = 12f;
+    private static final double SIZE_POWER = 6;
 
     //t<0-1>
     private static final float[] T = new float[]{0.1F, 0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F};
@@ -41,12 +43,43 @@ public class BrushRender {
         paint.setStyle(Paint.Style.FILL);
         paint.setStrokeWidth(1.0F);
 
-        for (int i = 0; i < intensivePoints.size() - 1; ++i) {
+        for (int i = 0; i < intensivePoints.size(); ++i) {
             TouchPoint pointI = intensivePoints.get(i);
-            TouchPoint pointI1 = intensivePoints.get(i + 1);
-            paint.setStrokeWidth(pointI1.size);
-            canvas.drawLine(pointI.x, pointI.y, pointI1.x, pointI1.y, paint);
+            paint.setStrokeWidth((float) Math.pow(pointI.size / SIZE_AVERAGE, SIZE_POWER) * SIZE_BASE);
+            canvas.drawPoint(pointI.x, pointI.y, paint);
         }
+
+//        Path path = new Path();
+//        PointF circleCenter0;
+//        PointF circleCenter1;
+//        float r;
+//        for (int i = 0; i < intensivePoints.size() - 1; ++i) {
+//            TouchPoint pointI = intensivePoints.get(i);
+//            TouchPoint pointI1 = intensivePoints.get(i + 1);
+//            float _strokeWidth = pointI1.size - SIZE_AVERAGE;
+//            paint.setStrokeWidth(_strokeWidth);
+//            path.reset();
+//            circleCenter0 = new PointF(pointI.x, pointI.y);
+//            circleCenter1 = new PointF(pointI1.x, pointI1.y);
+//            r = _strokeWidth;
+//            Log.d(TAG, "drawStroke point.size=" + pointI1.size + "?半径r=" + r);
+//            long millis = System.currentTimeMillis();
+//            List<PointF[]> pointFOf2OutsideTan = MathUtils.get4PointFOf2OutsideTan(circleCenter0, circleCenter1, r);
+//            if (ObjectUtils.isEmpty(pointFOf2OutsideTan)) continue;
+//
+//            PointF startPointF = pointFOf2OutsideTan.get(0)[0];
+//            PointF pointF1 = pointFOf2OutsideTan.get(0)[1];
+//            PointF pointF2 = pointFOf2OutsideTan.get(1)[1];
+//            PointF pointF3 = pointFOf2OutsideTan.get(1)[0];
+//            path.moveTo(startPointF.x, startPointF.y);
+//            path.lineTo(pointF1.x, pointF1.y);
+//            path.lineTo(pointF2.x, pointF2.y);
+//            path.lineTo(pointF3.x, pointF3.y);
+//            path.close();
+//            canvas.drawPath(path, paint);
+//            Log.d(TAG, "drawStroke 斜矩形 startPointF=" + startPointF.toString() + "?pointF1=" + pointF1.toString() + "?pointF2=" + pointF2.toString() + "?pointF3=" + pointF3.toString());
+//            Log.d(TAG, "drawStroke 绘制了一根 耗时=" + (System.currentTimeMillis() - millis));
+//        }
 
         paint.setStyle(var5);
         paint.setStrokeWidth(var6);
@@ -63,7 +96,7 @@ public class BrushRender {
     public static List<List<TouchPoint>> intensiveByIncrease(Canvas canvas, Paint paint, TouchPoint increasePoint, List<TouchPoint> oldPoints, List<TouchPoint> intensivePoints, float strokeWidth, float maxTouchPressure) {
         if (ObjectUtils.isEmpty(intensivePoints) || intensivePoints.size() < 6 || ObjectUtils.isEmpty(oldPoints) || oldPoints.size() < 3
                 || ObjectUtils.isEmpty(increasePoint) || ObjectUtils.isEmpty(canvas) || ObjectUtils.isEmpty(paint)) {
-            Log.e(TAG, "intensiveByIncrease 有传参为空");
+            Log.e(TAG, "intensiveByIncrease 有传参为空 increasePoint=" + increasePoint + "?oldPoints=" + oldPoints + "?intensivePoints=" + intensivePoints);
             return null;
         }
         Log.d(TAG, "intensiveByIncrease");
@@ -218,8 +251,6 @@ public class BrushRender {
         List<TouchPoint> mergeFloats = new ArrayList<>();
         mergeFloats.addAll(intensiveBezier.get(0));
         mergeFloats.addAll(intensiveBezier.get(1));
-//        mergeFloats.add(p0);
-//        mergeFloats.add(p2);
 
         return mergeFloats;
     }
@@ -302,7 +333,8 @@ public class BrushRender {
         eraserPaint.setStrokeWidth(strokeWidth);
 
         for (int var8 = 0; var8 < oldLastBezierLastHalfSegmentPoints.size() - 1; ++var8) {
-//            eraserPaint.setStrokeWidth(oldLastBezierLastHalfSegmentPoints.get(var8 + 1).size);
+            float pow = (float) Math.pow(oldLastBezierLastHalfSegmentPoints.get(var8 + 1).size / SIZE_AVERAGE, SIZE_POWER);
+            eraserPaint.setStrokeWidth(pow * SIZE_BASE);
             canvas.drawLine(oldLastBezierLastHalfSegmentPoints.get(var8).x, oldLastBezierLastHalfSegmentPoints.get(var8).y, oldLastBezierLastHalfSegmentPoints.get(var8 + 1).x, oldLastBezierLastHalfSegmentPoints.get(var8 + 1).y, eraserPaint);
         }
 

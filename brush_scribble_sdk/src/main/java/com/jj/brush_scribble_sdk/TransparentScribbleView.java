@@ -25,13 +25,13 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public class TransparentScribbleView extends SurfaceView {
 
     private static final String TAG = "TransparentScribbleView";
-    private static final int FRAME_CACHE_SIZE = 32;
+    private static final int FRAME_CACHE_SIZE = 16;
     private WaitGo waitGo = new WaitGo();
     private boolean is2StopRender;
     private boolean isRenderRunning;
     private boolean isRefresh;
     private Paint renderPaint;
-    private float strokeWidth = 12f;
+    private float strokeWidth = 6f;
     private int strokeColor = Color.BLACK;
     private RawInputCallback rawInputCallback;
     private static final int ACTIVE_POINTER_ID = 0;
@@ -88,9 +88,9 @@ public class TransparentScribbleView extends SurfaceView {
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouch");
+        Log.d(TAG, "onTouchEvent event.size=" + event.getSize());
 
-        TouchPoint activeTouchPoint = new TouchPoint(event.getX(), event.getY());
+        TouchPoint activeTouchPoint = new TouchPoint(event.getX(), event.getY(), event.getPressure(), event.getSize(), 0);
 
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
@@ -226,11 +226,13 @@ public class TransparentScribbleView extends SurfaceView {
 
                                 }
 
+
                                 //擦除上一根线的毛边
                                 BrushRender.eraseStroke(canvas, mPathPreviousBezierLastHalfMap.get(_toDrawPath), strokeWidth, 0);
 
                                 //绘制加密后的线
                                 BrushRender.drawStroke(canvas, renderPaint, intensivePoints, strokeWidth, 0);
+
 
                                 previousPath = _toDrawPath;
 
@@ -302,7 +304,9 @@ public class TransparentScribbleView extends SurfaceView {
 
     private void initRenderPaint() {
         if (renderPaint != null) return;
-        renderPaint = new Paint();
+        renderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        renderPaint.setStrokeJoin(Paint.Join.ROUND);
+        renderPaint.setStrokeCap(Paint.Cap.ROUND);
         renderPaint.setStrokeWidth(strokeWidth);
         renderPaint.setStyle(Paint.Style.STROKE);
         renderPaint.setColor(strokeColor);
@@ -315,6 +319,7 @@ public class TransparentScribbleView extends SurfaceView {
         if (mLast16PathQueue.size() == FRAME_CACHE_SIZE) {
             TouchPointList touchPointList = mLast16PathQueue.removeFirst();
             mPathIntensivePointsMap.remove(touchPointList);
+            mPathPreviousBezierLastHalfMap.remove(touchPointList);
         }
         TouchPointList lastTouchPointList = new TouchPointList(activeTouchPointList.size());
         lastTouchPointList.addAll(activeTouchPointList);
