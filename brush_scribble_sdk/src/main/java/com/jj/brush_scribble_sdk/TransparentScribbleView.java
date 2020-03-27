@@ -18,9 +18,8 @@ import com.jj.brush_scribble_sdk.data.TouchPoint;
 import com.jj.brush_scribble_sdk.data.TouchPointList;
 import com.jj.brush_scribble_sdk.intf.RawInputCallback;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class TransparentScribbleView extends SurfaceView {
@@ -37,8 +36,9 @@ public class TransparentScribbleView extends SurfaceView {
     private RawInputCallback rawInputCallback;
     private static final int ACTIVE_POINTER_ID = 0;
     private TouchPointList activeTouchPointList = new TouchPointList();
-    private ConcurrentLinkedDeque<TouchPointList> last16PathQueue = new ConcurrentLinkedDeque<>();
-    private Map<TouchPointList, List<TouchPoint>> mPointsIntensivePointsMap = new HashMap<>();
+    private ConcurrentLinkedDeque<TouchPointList> mLast16PathQueue = new ConcurrentLinkedDeque<>();
+    private ConcurrentHashMap<TouchPointList, List<TouchPoint>> mPathIntensivePointsMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<TouchPointList, List<TouchPoint>> mPathPreviousBezierLastHalfMap = new ConcurrentHashMap<>();
 
     public int getStrokeColor() {
         return strokeColor;
@@ -96,6 +96,7 @@ public class TransparentScribbleView extends SurfaceView {
             case MotionEvent.ACTION_DOWN: {
 
                 activeTouchPointList.getPoints().clear();
+                activeTouchPointList.setTimeStamp(System.currentTimeMillis());
                 activeTouchPointList.add(activeTouchPoint);
                 renderPath();
 
@@ -175,47 +176,67 @@ public class TransparentScribbleView extends SurfaceView {
 
                             //由于双缓冲机制,得绘制最近几根笔迹
 
-                            int size = last16PathQueue.size();
-                            int i = 0;
-                            for (TouchPointList lastPath : last16PathQueue) {
-                                if (lastPath.size() == 0) {
-                                    i++;
+                            int size = mLast16PathQueue.size();
+                            TouchPointList previousPath = null;
+                            for (TouchPointList _toDrawPath : mLast16PathQueue) {
+                                if (_toDrawPath.size() == 0) {
                                     continue;
                                 }
 
                                 if (is2StopRender) break;
 
-                                List<TouchPoint> lastPathPoints = lastPath.getPoints();
-                                if (lastPathPoints.size() < 3) {
-                                    addAPath2Canvas(lastPathPoints, canvas);
-                                    i++;
+                                List<TouchPoint> _toDrawPathPoints = _toDrawPath.getPoints();
+                                int _toDrawPathPointsSize = _toDrawPathPoints.size();
+                                if (_toDrawPathPointsSize <= 3) {
+                                    addAPath2Canvas(_toDrawPathPoints, canvas);
+                                    if (_toDrawPathPointsSize == 3) {
+                                        mPathIntensivePointsMap.put(_toDrawPath, BrushRender.intensive(_toDrawPathPoints));
+                                        previousPath = _toDrawPath;
+                                    }
                                     continue;
                                 }
 
-                                List<TouchPoint> intensivePoints = mPointsIntensivePointsMap.get(lastPath);
+                                List<TouchPoint> intensivePoints = mPathIntensivePointsMap.get(_toDrawPath);
                                 if (intensivePoints == null) {
-                                    //新bezier
-                                    intensivePoints = BrushRender.computeStrokePoints(lastPath.getPoints());
-
-                                    mPointsIntensivePointsMap.put(lastPath, intensivePoints);
-                                } else if (i == size - 1) {
-                                    //活动bezier
-                                    TouchPoint remove = lastPathPoints.remove(lastPathPoints.size() - 1);
-                                    intensivePoints = BrushRender.computeStrokePoints(canvas, renderPaint, remove, lastPathPoints, intensivePoints, strokeWidth, 0);
-
-                                    if (ObjectUtils.isEmpty(intensivePoints)) {
-                                        Log.e(TAG, "增量后怎么会为空?!!!");
-                                    } else {
-                                        mPointsIntensivePointsMap.put(lastPath, intensivePoints);
+                                    //新线
+                                    if (previousPath == null || _toDrawPath.getTimeStamp() != previousPath.getTimeStamp()) {
+                                        Log.e(TAG, "遍历绘制 mLast16PathQueue 逻辑异常 前一根线没加密成功?");
+                                        continue;
                                     }
+
+                                    TouchPoint increasePoint = _toDrawPathPoints.get(_toDrawPathPointsSize - 1);
+                                    List<List<TouchPoint>> increaseComputeResult = BrushRender.intensiveByIncrease(
+                                            canvas, renderPaint, increasePoint, previousPath.getPoints(), mPathIntensivePointsMap.get(previousPath), strokeWidth, 0
+                                    );
+                                    if (ObjectUtils.isEmpty(increaseComputeResult)) {
+                                        Log.e(TAG, "遍历绘制 mLast16PathQueue 逻辑异常 增量加密失败");
+                                        continue;
+                                    }
+
+                                    intensivePoints = increaseComputeResult.get(0);
+                                    mPathIntensivePointsMap.put(_toDrawPath, intensivePoints);
+
+                                    List<TouchPoint> oldLastBezierLastHalfSegmentPoints = increaseComputeResult.get(1);
+
+                                    if (ObjectUtils.isEmpty(oldLastBezierLastHalfSegmentPoints)) {
+                                        Log.e(TAG, "遍历绘制 mLast16PathQueue 逻辑异常 去毛边失败");
+                                    } else {
+                                        mPathPreviousBezierLastHalfMap.put(_toDrawPath, oldLastBezierLastHalfSegmentPoints);
+                                    }
+
                                 }
 
-                                BrushRender.drawStrokeWithoutIntensive(canvas, renderPaint, intensivePoints, strokeWidth, 0);
+                                //擦除上一根线的毛边
+                                BrushRender.eraseStroke(canvas, mPathPreviousBezierLastHalfMap.get(_toDrawPath), strokeWidth, 0);
 
-                                i++;
+                                //绘制加密后的线
+                                BrushRender.drawStroke(canvas, renderPaint, intensivePoints, strokeWidth, 0);
+
+                                previousPath = _toDrawPath;
+
                             }
 
-                            Log.d(TAG, "doRender consume time=" + (System.currentTimeMillis() - startDoRenderTime) + "?last16PathQueue.size=" + size);
+                            Log.d(TAG, "doRender consume time=" + (System.currentTimeMillis() - startDoRenderTime) + "?mLast16PathQueue.size=" + size);
 
                         } else {
                             Log.e(TAG, "surfaceView released return");
@@ -291,13 +312,14 @@ public class TransparentScribbleView extends SurfaceView {
     private void renderPath() {
         Log.d(TAG, "renderPath start");
 
-        if (last16PathQueue.size() == FRAME_CACHE_SIZE) {
-            TouchPointList touchPointList = last16PathQueue.removeFirst();
-            mPointsIntensivePointsMap.remove(touchPointList);
+        if (mLast16PathQueue.size() == FRAME_CACHE_SIZE) {
+            TouchPointList touchPointList = mLast16PathQueue.removeFirst();
+            mPathIntensivePointsMap.remove(touchPointList);
         }
         TouchPointList lastTouchPointList = new TouchPointList(activeTouchPointList.size());
         lastTouchPointList.addAll(activeTouchPointList);
-        last16PathQueue.add(lastTouchPointList);
+        lastTouchPointList.setTimeStamp(activeTouchPointList.getTimeStamp());
+        mLast16PathQueue.add(lastTouchPointList);
 
         isRefresh = true;
         if (!waitGo.isGo()) waitGo.go();
@@ -327,7 +349,10 @@ public class TransparentScribbleView extends SurfaceView {
     public void clearScreenAfterSurfaceViewCreated() {
         Log.d(TAG, "clearScreenAfterSurfaceViewCreated ");
 
-        last16PathQueue.clear();
+        mLast16PathQueue.clear();
+        mPathIntensivePointsMap.clear();
+        mPathPreviousBezierLastHalfMap.clear();
+
         activeTouchPointList.getPoints().clear();
 
         Canvas canvas = getHolder().lockCanvas();

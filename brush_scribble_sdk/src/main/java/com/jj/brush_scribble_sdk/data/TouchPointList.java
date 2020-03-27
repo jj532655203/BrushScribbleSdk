@@ -3,7 +3,6 @@ package com.jj.brush_scribble_sdk.data;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,6 +10,7 @@ import java.util.List;
 
 public class TouchPointList implements Serializable, Cloneable {
     private List<TouchPoint> a;
+    private long timeStamp;
 
     public TouchPointList() {
         this.a = new ArrayList();
@@ -18,6 +18,14 @@ public class TouchPointList implements Serializable, Cloneable {
 
     public TouchPointList(int size) {
         this.a = new ArrayList(size);
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     public final List<TouchPoint> getPoints() {
