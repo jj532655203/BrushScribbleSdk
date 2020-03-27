@@ -69,20 +69,22 @@ public class BrushRender {
         Log.d(TAG, "intensiveByIncrease");
 
         //将intensivePoints中最后bezier后半段加密点都去掉
-        List<TouchPoint> oldLastBezierLastHalfSegment = new ArrayList<>(6);
         int intensivePointSize = intensivePoints.size();
-        for (int i = 0; i < 6; i++) {
-            TouchPoint lasti = intensivePoints.remove(intensivePointSize - i - 1);
-            oldLastBezierLastHalfSegment.add(lasti);
-        }
+        List<TouchPoint> subList = intensivePoints.subList(intensivePointSize - 6, intensivePointSize);
+        List<TouchPoint> oldLastBezierLastHalfSegment = new ArrayList<>(subList);
+        subList.clear();
 
-        List<TouchPoint> increaseIntensivePoints = new ArrayList<>(intensivePoints);
+        List<TouchPoint> increaseIntensivePoints;
 
+        //添加旧加密点集合
+        increaseIntensivePoints = new ArrayList<>(intensivePoints);
+
+        //添加合并点集合
         List<List<TouchPoint>> bezier = intensiveBezier(oldPoints.get(oldPoints.size() - 2), oldPoints.get(oldPoints.size() - 1), increasePoint);
         List<TouchPoint> mergeBezierOverlap = mergeBezierOverlap(oldLastBezierLastHalfSegment, bezier.get(0));
-
         increaseIntensivePoints.addAll(mergeBezierOverlap);
 
+        //添加最后半段bezier
         increaseIntensivePoints.addAll(bezier.get(1));
 
         List<List<TouchPoint>> arr = new ArrayList<>(2);
@@ -198,28 +200,26 @@ public class BrushRender {
     private static List<TouchPoint> mergeBezierOverlap(List<TouchPoint> iLastHalfSegment, List<TouchPoint> iPlusFistHalfSegment) {
 
         TouchPoint iLastHalfSegmentPoint0 = iLastHalfSegment.get(0);
-        TouchPoint iLastHalfSegmentPoint6 = iLastHalfSegment.get(5);
+        TouchPoint iLastHalfSegmentPoint5 = iLastHalfSegment.get(5);
         TouchPoint iPlusFistHalfSegmentPoint0 = iPlusFistHalfSegment.get(0);
-        TouchPoint iPlusFistHalfSegmentPoint6 = iPlusFistHalfSegment.get(5);
+        TouchPoint iPlusFistHalfSegmentPoint5 = iPlusFistHalfSegment.get(5);
 
         TouchPoint p1 = new TouchPoint();
-        p1.x = (iLastHalfSegmentPoint0.x + iLastHalfSegmentPoint6.x + iPlusFistHalfSegmentPoint0.x + iPlusFistHalfSegmentPoint6.x) / 4;
-        p1.y = (iLastHalfSegmentPoint0.y + iLastHalfSegmentPoint6.y + iPlusFistHalfSegmentPoint0.y + iPlusFistHalfSegmentPoint6.y) / 4;
-        p1.size = (iLastHalfSegmentPoint0.size + iLastHalfSegmentPoint6.size + iPlusFistHalfSegmentPoint0.size + iPlusFistHalfSegmentPoint6.size) / 4;
+        p1.x = (iLastHalfSegmentPoint0.x + iLastHalfSegmentPoint5.x + iPlusFistHalfSegmentPoint0.x + iPlusFistHalfSegmentPoint5.x) / 4;
+        p1.y = (iLastHalfSegmentPoint0.y + iLastHalfSegmentPoint5.y + iPlusFistHalfSegmentPoint0.y + iPlusFistHalfSegmentPoint5.y) / 4;
+        p1.size = (iLastHalfSegmentPoint0.size + iLastHalfSegmentPoint5.size + iPlusFistHalfSegmentPoint0.size + iPlusFistHalfSegmentPoint5.size) / 4;
 
         TouchPoint p0 = new TouchPoint(iLastHalfSegmentPoint0.x, iLastHalfSegmentPoint0.y, 0, iLastHalfSegmentPoint0.size, 0);
 
-        TouchPoint p2 = new TouchPoint(iPlusFistHalfSegmentPoint6.x, iPlusFistHalfSegmentPoint6.y, 0, iPlusFistHalfSegmentPoint6.size, 0);
+        TouchPoint p2 = new TouchPoint(iPlusFistHalfSegmentPoint5.x, iPlusFistHalfSegmentPoint5.y, 0, iPlusFistHalfSegmentPoint5.size, 0);
 
         List<List<TouchPoint>> intensiveBezier = intensiveBezier(p0, p1, p2);
 
         List<TouchPoint> mergeFloats = new ArrayList<>();
         mergeFloats.addAll(intensiveBezier.get(0));
         mergeFloats.addAll(intensiveBezier.get(1));
-//        List<TouchPoint> firstHalfFloats = intensiveBezier.get(0);
-//        System.arraycopy(firstHalfFloats, 0, mergeFloats, 0, firstHalfFloats.size());
-//        List<TouchPoint> lastHalfFloats = intensiveBezier.get(1);
-//        System.arraycopy(lastHalfFloats, 0, mergeFloats, firstHalfFloats.size(), lastHalfFloats.size());
+//        mergeFloats.add(p0);
+//        mergeFloats.add(p2);
 
         return mergeFloats;
     }
@@ -228,8 +228,6 @@ public class BrushRender {
      * merge相邻两根bezier重叠的部分
      * 权重思想(有bug)
      *
-     * @param iLastHalfSegment     第一根bezier的后半段
-     * @param iPlusFistHalfSegment 第二个bezier的前半段
      * @return merge后的前半段点集合和后半段点集合
      */
 //    private static float[] mergeBezierOverlapOld(float[] iLastHalfSegment, float[] iPlusFistHalfSegment) {
