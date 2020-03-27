@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public class TransparentScribbleView extends SurfaceView {
 
     private static final String TAG = "TransparentScribbleView";
-    private static final int FRAME_CACHE_SIZE = 16;
+    private static final int FRAME_CACHE_SIZE = 64;
     private WaitGo waitGo = new WaitGo();
     private boolean is2StopRender;
     private boolean isRenderRunning;
@@ -88,7 +88,7 @@ public class TransparentScribbleView extends SurfaceView {
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouchEvent event.size=" + event.getSize());
+        Log.d(TAG, "onTouchEvent event.size=" + event.getSize() + "pressure=" + event.getPressure());
 
         TouchPoint activeTouchPoint = new TouchPoint(event.getX(), event.getY(), event.getPressure(), event.getSize(), 0);
 
@@ -204,6 +204,7 @@ public class TransparentScribbleView extends SurfaceView {
                                         continue;
                                     }
 
+                                    long intensiveStartTime = System.currentTimeMillis();
                                     TouchPoint increasePoint = _toDrawPathPoints.get(_toDrawPathPointsSize - 1);
                                     List<List<TouchPoint>> increaseComputeResult = BrushRender.intensiveByIncrease(
                                             canvas, renderPaint, increasePoint, previousPath.getPoints(), mPathIntensivePointsMap.get(previousPath), strokeWidth, 0
@@ -212,8 +213,16 @@ public class TransparentScribbleView extends SurfaceView {
                                         Log.e(TAG, "遍历绘制 mLast16PathQueue 逻辑异常 增量加密失败");
                                         continue;
                                     }
+                                    Log.d(TAG, "增量加密 耗时=" + (System.currentTimeMillis() - intensiveStartTime));
 
                                     intensivePoints = increaseComputeResult.get(0);
+
+                                    //由于现在是使用以点绘实心圆的方式,所以可以将intensivePoints倒数第50点之前的点删除
+                                    int intensivePointsSize = intensivePoints.size();
+                                    if (intensivePointsSize > 50) {
+                                        intensivePoints = intensivePoints.subList(intensivePointsSize - 50, intensivePointsSize);
+                                    }
+
                                     mPathIntensivePointsMap.put(_toDrawPath, intensivePoints);
 
                                     List<TouchPoint> oldLastBezierLastHalfSegmentPoints = increaseComputeResult.get(1);
@@ -226,6 +235,7 @@ public class TransparentScribbleView extends SurfaceView {
 
                                 }
 
+                                long drawStartTime = System.currentTimeMillis();
 
                                 //擦除上一根线的毛边
                                 BrushRender.eraseStroke(canvas, mPathPreviousBezierLastHalfMap.get(_toDrawPath), strokeWidth, 0);
@@ -233,6 +243,7 @@ public class TransparentScribbleView extends SurfaceView {
                                 //绘制加密后的线
                                 BrushRender.drawStroke(canvas, renderPaint, intensivePoints, strokeWidth, 0);
 
+                                Log.d(TAG, "擦除+绘制一次 耗时=" + (System.currentTimeMillis() - drawStartTime));
 
                                 previousPath = _toDrawPath;
 

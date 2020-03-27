@@ -16,9 +16,11 @@ import java.util.List;
 public class BrushRender {
 
     private static final String TAG = "BrushRender";
-    private static final float SIZE_AVERAGE = 180f;
-    private static final float SIZE_BASE = 12f;
-    private static final double SIZE_POWER = 6;
+    private static final int SIZE_AVERAGE = 170;
+    private static final int PRESSURE_AVERAGE = 4;
+    private static final int WIDTH_BASE = 10;
+    private static final int WIDTH_POWER = 6;
+    private static final int MAX_WIDTH = 50;
 
     //t<0-1>
     private static final float[] T = new float[]{0.1F, 0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F};
@@ -45,7 +47,9 @@ public class BrushRender {
 
         for (int i = 0; i < intensivePoints.size(); ++i) {
             TouchPoint pointI = intensivePoints.get(i);
-            paint.setStrokeWidth((float) Math.pow(pointI.size / SIZE_AVERAGE, SIZE_POWER) * SIZE_BASE);
+            float _strokeWidth = (float) Math.pow(pointI.pressure / PRESSURE_AVERAGE, WIDTH_POWER) * WIDTH_BASE;
+            if (_strokeWidth > MAX_WIDTH) _strokeWidth = MAX_WIDTH;
+            paint.setStrokeWidth(_strokeWidth);
             canvas.drawPoint(pointI.x, pointI.y, paint);
         }
 
@@ -241,10 +245,11 @@ public class BrushRender {
         p1.x = (iLastHalfSegmentPoint0.x + iLastHalfSegmentPoint5.x + iPlusFistHalfSegmentPoint0.x + iPlusFistHalfSegmentPoint5.x) / 4;
         p1.y = (iLastHalfSegmentPoint0.y + iLastHalfSegmentPoint5.y + iPlusFistHalfSegmentPoint0.y + iPlusFistHalfSegmentPoint5.y) / 4;
         p1.size = (iLastHalfSegmentPoint0.size + iLastHalfSegmentPoint5.size + iPlusFistHalfSegmentPoint0.size + iPlusFistHalfSegmentPoint5.size) / 4;
+        p1.pressure = (iLastHalfSegmentPoint0.pressure + iLastHalfSegmentPoint5.pressure + iPlusFistHalfSegmentPoint0.pressure + iPlusFistHalfSegmentPoint5.pressure) / 4;
 
-        TouchPoint p0 = new TouchPoint(iLastHalfSegmentPoint0.x, iLastHalfSegmentPoint0.y, 0, iLastHalfSegmentPoint0.size, 0);
+        TouchPoint p0 = new TouchPoint(iLastHalfSegmentPoint0.x, iLastHalfSegmentPoint0.y, iLastHalfSegmentPoint0.pressure, iLastHalfSegmentPoint0.size, 0);
 
-        TouchPoint p2 = new TouchPoint(iPlusFistHalfSegmentPoint5.x, iPlusFistHalfSegmentPoint5.y, 0, iPlusFistHalfSegmentPoint5.size, 0);
+        TouchPoint p2 = new TouchPoint(iPlusFistHalfSegmentPoint5.x, iPlusFistHalfSegmentPoint5.y, iPlusFistHalfSegmentPoint5.pressure, iPlusFistHalfSegmentPoint5.size, 0);
 
         List<List<TouchPoint>> intensiveBezier = intensiveBezier(p0, p1, p2);
 
@@ -283,17 +288,19 @@ public class BrushRender {
 
         //0-5
         List<TouchPoint> fistHalfSegment = new ArrayList<>(6);
-        fistHalfSegment.add(new TouchPoint(point0.x, point0.y, 0, point0.size, 0));
+        fistHalfSegment.add(new TouchPoint(point0.x, point0.y, point0.pressure, point0.size, 0));
         //5-10
         List<TouchPoint> lastHalfSegment = new ArrayList<>(6);
 
         List<TouchPoint> data = new ArrayList<>(9);
         float sizeOffset = point2.size - point0.size;
+        float pressureOffset = point2.pressure - point0.pressure;
         for (int i = 0; i < T.length; i++) {
             float x = (float) (Math.pow(1 - T[i], 2) * point0.x + 2 * T[i] * (1 - T[i]) * point1.x + Math.pow(T[i], 2) * point2.x);
             float y = (float) (Math.pow(1 - T[i], 2) * point0.y + 2 * T[i] * (1 - T[i]) * point1.y + Math.pow(T[i], 2) * point2.y);
             float size = point0.size + sizeOffset * i / 10;
-            data.add(new TouchPoint(x, y, 0, size, 0));
+            float pressure = point0.pressure + pressureOffset * i / 10;
+            data.add(new TouchPoint(x, y, pressure, size, 0));
         }
         for (int i = 0; i < data.size(); i++) {
             TouchPoint pointI = data.get(i);
@@ -310,7 +317,7 @@ public class BrushRender {
             }
         }
 
-        lastHalfSegment.add(new TouchPoint(point2.x, point2.y, 0, point2.size, 0));
+        lastHalfSegment.add(new TouchPoint(point2.x, point2.y, point2.pressure, point2.size, 0));
 
         List<List<TouchPoint>> list = new ArrayList<>();
         list.add(fistHalfSegment);
@@ -332,10 +339,12 @@ public class BrushRender {
         }
         eraserPaint.setStrokeWidth(strokeWidth);
 
-        for (int var8 = 0; var8 < oldLastBezierLastHalfSegmentPoints.size() - 1; ++var8) {
-            float pow = (float) Math.pow(oldLastBezierLastHalfSegmentPoints.get(var8 + 1).size / SIZE_AVERAGE, SIZE_POWER);
-            eraserPaint.setStrokeWidth(pow * SIZE_BASE);
-            canvas.drawLine(oldLastBezierLastHalfSegmentPoints.get(var8).x, oldLastBezierLastHalfSegmentPoints.get(var8).y, oldLastBezierLastHalfSegmentPoints.get(var8 + 1).x, oldLastBezierLastHalfSegmentPoints.get(var8 + 1).y, eraserPaint);
+        for (int i = 0; i < oldLastBezierLastHalfSegmentPoints.size() ; ++i) {
+            TouchPoint pointI = oldLastBezierLastHalfSegmentPoints.get(i);
+            float _strokeWidth = (float) Math.pow(pointI.pressure / PRESSURE_AVERAGE, WIDTH_POWER) * WIDTH_BASE;
+            if (_strokeWidth > MAX_WIDTH) _strokeWidth = MAX_WIDTH;
+            eraserPaint.setStrokeWidth(_strokeWidth);
+            canvas.drawPoint(pointI.x, pointI.y, eraserPaint);
         }
 
     }
@@ -344,7 +353,7 @@ public class BrushRender {
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
         paint.setAntiAlias(true);
-        paint.setStyle(Paint.Style.STROKE);
+        paint.setStyle(Paint.Style.FILL);
         paint.setDither(true);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
