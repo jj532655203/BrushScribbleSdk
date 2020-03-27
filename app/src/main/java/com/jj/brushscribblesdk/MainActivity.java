@@ -2,13 +2,11 @@ package com.jj.brushscribblesdk;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.jj.brush_scribble_sdk.TransparentScribbleView;
+import com.jj.brush_scribble_sdk.BrushScribbleView;
 import com.jj.brush_scribble_sdk.data.TouchPoint;
 import com.jj.brush_scribble_sdk.data.TouchPointList;
 import com.jj.brush_scribble_sdk.intf.RawInputCallback;
@@ -63,20 +61,13 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-    private TransparentScribbleView surfaceView;
+    private BrushScribbleView surfaceView;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.consume_event_view).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true;
-            }
-        });
-
 
         surfaceView = findViewById(R.id.surface_view);
         surfaceView.getHolder().addCallback(holderCallBack);

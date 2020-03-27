@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-public class TransparentScribbleView extends SurfaceView {
+public class BrushScribbleView extends SurfaceView {
 
     private static final String TAG = "TransparentScribbleView";
     private static final int FRAME_CACHE_SIZE = 64;
@@ -56,20 +56,20 @@ public class TransparentScribbleView extends SurfaceView {
         this.strokeWidth = strokeWidth;
     }
 
-    public TransparentScribbleView setRawInputCallback(RawInputCallback rawInputCallback) {
+    public BrushScribbleView setRawInputCallback(RawInputCallback rawInputCallback) {
         this.rawInputCallback = rawInputCallback;
         return this;
     }
 
-    public TransparentScribbleView(Context context) {
+    public BrushScribbleView(Context context) {
         this(context, null);
     }
 
-    public TransparentScribbleView(Context context, AttributeSet attrs) {
+    public BrushScribbleView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public TransparentScribbleView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public BrushScribbleView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         setBackgroundResource(R.color.transparent);

@@ -6,12 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <View
-        android:id="@+id/consume_event_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.jj.brush_scribble_sdk.TransparentScribbleView
+    <com.jj.brush_scribble_sdk.BrushScribbleView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
