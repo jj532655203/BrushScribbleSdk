@@ -28,5 +28,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     implementation project(":brush_scribble_sdk")
-//    implementation "com.github.jj532655203:BrushScribbleSdk:1.0.2"
+//    implementation 'com.github.jj532655203:BrushScribbleSdk:1.0.2'
 }
