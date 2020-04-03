@@ -1,5 +1,10 @@
 # BrushScribbleSdk
 
+apk下载地址:
+https://phone-love-piano-public-ro.oss-cn-shenzhen.aliyuncs.com/demo-apk/BrushScribbleSdk_debug_0403.apk
+或手机扫码下载
+![Image scan qrcode download apk] brush_scribble_apk_download_qrcode.png
+
 ##  1.对!是你想要的毛笔笔锋效果
 
 ##  2.BrushScribbleView是一个背景透明、实时显示笔迹的surfaceView，不管是大笔迹量还是超长笔迹，都不闪
