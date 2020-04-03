@@ -3,7 +3,7 @@
 apk下载地址:
 https://phone-love-piano-public-ro.oss-cn-shenzhen.aliyuncs.com/demo-apk/BrushScribbleSdk_debug_0403.apk
 或手机扫码下载
-![Image scan qrcode download apk](brush_scribble_apk_download_qrcode.png)
+![Image scan qrcode download apk](https://phone-love-piano-public-ro.oss-cn-shenzhen.aliyuncs.com/demo-apk/brush_scribble_apk_download_qrcode.png?Expires=1585879669&OSSAccessKeyId=TMP.3Kdx8HPo5dBAfoybe9RvEXJyLStYmxtejzov6nmV7aUUiTp6TuxW538nGyA1dnwhpQnLk9bghWacsgmbKD9NGctM4cNWgK&Signature=bHt7zTcQRvXF%2FCGqpdQAw2Zj%2Foo%3D)
 
 ##  1.对!是你想要的毛笔笔锋效果
 
