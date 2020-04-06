@@ -162,7 +162,7 @@ public class BrushScribbleView extends SurfaceView {
                     Canvas canvas = null;
                     try {
                         if (!isRefresh) {
-                            waitGo.waitOne();
+                            waitGo.wait1();
                             continue;
                         }
                         isRefresh = false;
@@ -338,7 +338,7 @@ public class BrushScribbleView extends SurfaceView {
         mLast16PathQueue.add(lastTouchPointList);
 
         isRefresh = true;
-        if (!waitGo.isGo()) waitGo.go();
+        waitGo.go();
     }
 
 
@@ -392,7 +392,7 @@ public class BrushScribbleView extends SurfaceView {
             return;
         }
         isRefresh = true;
-        if (!waitGo.isGo()) waitGo.go();
+        waitGo.go();
     }
 
 }
