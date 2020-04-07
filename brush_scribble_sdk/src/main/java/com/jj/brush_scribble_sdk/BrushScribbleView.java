@@ -20,7 +20,7 @@ import com.jj.brush_scribble_sdk.intf.RawInputCallback;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BrushScribbleView extends SurfaceView {
 
@@ -36,7 +36,7 @@ public class BrushScribbleView extends SurfaceView {
     private RawInputCallback rawInputCallback;
     private static final int ACTIVE_POINTER_ID = 0;
     private TouchPointList activeTouchPointList = new TouchPointList();
-    private ConcurrentLinkedDeque<TouchPointList> mLast16PathQueue = new ConcurrentLinkedDeque<>();
+    private ConcurrentLinkedQueue<TouchPointList> mLast16PathQueue = new ConcurrentLinkedQueue<>();
     private ConcurrentHashMap<TouchPointList, List<TouchPoint>> mPathIntensivePointsMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<TouchPointList, List<TouchPoint>> mPathPreviousBezierLastHalfMap = new ConcurrentHashMap<>();
 
@@ -307,7 +307,7 @@ public class BrushScribbleView extends SurfaceView {
     }
 
 
-   synchronized void stopRenderThread() {
+    synchronized void stopRenderThread() {
         if (!isRenderRunning) return;
         is2StopRender = true;
         waitGo.go();
@@ -328,7 +328,7 @@ public class BrushScribbleView extends SurfaceView {
         Log.d(TAG, "renderPath start");
 
         if (mLast16PathQueue.size() == FRAME_CACHE_SIZE) {
-            TouchPointList touchPointList = mLast16PathQueue.removeFirst();
+            TouchPointList touchPointList = mLast16PathQueue.poll();
             mPathIntensivePointsMap.remove(touchPointList);
             mPathPreviousBezierLastHalfMap.remove(touchPointList);
         }
