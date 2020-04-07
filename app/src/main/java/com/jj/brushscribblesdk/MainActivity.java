@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
         public void surfaceDestroyed(SurfaceHolder holder) {
             Log.d(TAG, "surfaceDestroyed");
 
+            surfaceView.setRawDrawingEnable(false);
+
         }
     };
     private RawInputCallback inputCallBack = new RawInputCallback() {
