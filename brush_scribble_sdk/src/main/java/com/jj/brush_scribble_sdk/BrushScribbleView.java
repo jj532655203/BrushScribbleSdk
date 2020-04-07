@@ -307,7 +307,7 @@ public class BrushScribbleView extends SurfaceView {
     }
 
 
-    void stopRenderThread() {
+   synchronized void stopRenderThread() {
         if (!isRenderRunning) return;
         is2StopRender = true;
         waitGo.go();
