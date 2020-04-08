@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BrushScribbleView extends SurfaceView {
 
     private static final String TAG = "TransparentScribbleView";
-    private static final int FRAME_CACHE_SIZE = 32;
+    private static final int FRAME_CACHE_SIZE = 48;
     private WaitGo renderWaitGo = new WaitGo();
     private WaitGo eraserWaitGo = new WaitGo();
     private boolean is2StopRender, is2StopEraser;
