@@ -3,6 +3,7 @@ package com.jj.brushscribblesdk;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -73,5 +74,9 @@ public class MainActivity extends AppCompatActivity {
 
         surfaceView = findViewById(R.id.surface_view);
         surfaceView.getHolder().addCallback(holderCallBack);
+    }
+
+    public void clearScreen(View view) {
+        surfaceView.clearScreenAfterSurfaceViewCreated();
     }
 }

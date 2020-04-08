@@ -25,11 +25,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BrushScribbleView extends SurfaceView {
 
     private static final String TAG = "TransparentScribbleView";
-    private static final int FRAME_CACHE_SIZE = 64;
-    private WaitGo waitGo = new WaitGo();
-    private boolean is2StopRender;
-    private boolean isRenderRunning;
-    private boolean isRefresh;
+    private static final int FRAME_CACHE_SIZE = 32;
+    private WaitGo renderWaitGo = new WaitGo();
+    private WaitGo eraserWaitGo = new WaitGo();
+    private boolean is2StopRender, is2StopEraser;
+    private boolean isRenderRunning, isEraserRunning;
+    private boolean isRendering, isErase;
     private Paint renderPaint;
     private float strokeWidth = 6f;
     private int strokeColor = Color.BLACK;
@@ -161,11 +162,11 @@ public class BrushScribbleView extends SurfaceView {
 
                     Canvas canvas = null;
                     try {
-                        if (!isRefresh) {
-                            waitGo.wait1();
+                        if (!isRendering) {
+                            renderWaitGo.wait1();
                             continue;
                         }
-                        isRefresh = false;
+                        isRendering = false;
 
 
                         long startDoRenderTime = System.currentTimeMillis();
@@ -271,6 +272,54 @@ public class BrushScribbleView extends SurfaceView {
         });
     }
 
+    synchronized void startEraserThread() {
+        is2StopEraser = false;
+        if (isEraserRunning) {
+            return;
+        }
+        isEraserRunning = true;
+
+        JobExecutor.getInstance().execute(new Runnable() {
+            @Override
+            public void run() {
+
+                Log.d(TAG, "startEraserThread ThreadName=" + Thread.currentThread().getName());
+
+                while (!is2StopEraser) {
+
+                    try {
+                        if (!isErase) {
+                            eraserWaitGo.wait1();
+                            continue;
+                        }
+                        isErase = false;
+
+                        long millis = System.currentTimeMillis();
+
+                        for (int i = 0; i < FRAME_CACHE_SIZE; i++) {
+                            Canvas canvas = getHolder().lockCanvas();
+                            if (canvas != null) {
+                                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                                getHolder().unlockCanvasAndPost(canvas);
+                            } else {
+                                Log.e(TAG, "clearScreenAfterSurfaceViewCreated 失败!");
+                            }
+                        }
+
+                        Log.d(TAG, "doErase consuming time " + (System.currentTimeMillis() - millis));
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                isRenderRunning = false;
+                Log.d(TAG, "startEraserThread 停止擦除线程成功 ThreadName=" + Thread.currentThread().getName());
+            }
+        });
+    }
+
     private void addAPath2Canvas(List<TouchPoint> points, Canvas canvas) {
 
         if (points == null || points.isEmpty()) {
@@ -310,7 +359,13 @@ public class BrushScribbleView extends SurfaceView {
     synchronized void stopRenderThread() {
         if (!isRenderRunning) return;
         is2StopRender = true;
-        waitGo.go();
+        renderWaitGo.go();
+    }
+
+    synchronized void stopEraserThread() {
+        if (!isEraserRunning) return;
+        is2StopEraser = true;
+        eraserWaitGo.go();
     }
 
     private void initRenderPaint() {
@@ -337,8 +392,8 @@ public class BrushScribbleView extends SurfaceView {
         lastTouchPointList.setTimeStamp(activeTouchPointList.getTimeStamp());
         mLast16PathQueue.add(lastTouchPointList);
 
-        isRefresh = true;
-        waitGo.go();
+        isRendering = true;
+        renderWaitGo.go();
     }
 
 
@@ -352,9 +407,11 @@ public class BrushScribbleView extends SurfaceView {
 
         if (enable) {
             startRenderThread();
+            startEraserThread();
             reproduceScribblesAfterSurfaceRecreated();
         } else {
             stopRenderThread();
+            stopEraserThread();
         }
     }
 
@@ -371,14 +428,13 @@ public class BrushScribbleView extends SurfaceView {
 
         activeTouchPointList.getPoints().clear();
 
-        Canvas canvas = getHolder().lockCanvas();
-        if (canvas != null) {
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-            getHolder().unlockCanvasAndPost(canvas);
-        } else {
-            Log.e(TAG, "clearScreenAfterSurfaceViewCreated 失败!");
-        }
+        clearScreen();
 
+    }
+
+    private void clearScreen() {
+        isErase = true;
+        eraserWaitGo.go();
     }
 
     /**
@@ -391,8 +447,8 @@ public class BrushScribbleView extends SurfaceView {
             Log.e(TAG, "reproduceScribblesAfterSurfaceRecreated --> need setRawDrawingEnable(true) first!");
             return;
         }
-        isRefresh = true;
-        waitGo.go();
+        isRendering = true;
+        renderWaitGo.go();
     }
 
 }
