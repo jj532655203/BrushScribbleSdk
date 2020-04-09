@@ -1,6 +1,6 @@
 # BrushScribbleSdk
 
-apk下载地址:
+apk下载地址:(体验:拇指写毛笔字)
 
 https://phone-love-piano-public-ro.oss-cn-shenzhen.aliyuncs.com/demo-apk/BrushScribbleSdk_debug_0403.apk
 
@@ -22,6 +22,6 @@ buildscript.repositories{ maven { url "https://jitpack.io" } }
 
 allprojects.repositories{ maven { url "https://jitpack.io" } }
 
-###  2.您要使用本图片加载器的module(比如app)的gradle文件
+###  2.您要使用BrushScribbleView的module(比如app)的gradle文件添加
 implementation 'com.github.jj532655203:BrushScribbleSdk:1.0.3'
 
